@@ -1,9 +1,8 @@
 # encoding:utf-8
 
 import time
-
-import openai
-import openai.error
+from openai import OpenAI
+from openai import OpenAIError
 
 from bot.bot import Bot
 from bot.openai.open_ai_image import OpenAIImage
@@ -21,12 +20,13 @@ user_session = dict()
 class OpenAIBot(Bot, OpenAIImage):
     def __init__(self):
         super().__init__()
-        openai.api_key = conf().get("open_ai_api_key")
-        if conf().get("open_ai_api_base"):
-            openai.api_base = conf().get("open_ai_api_base")
+        self.client = OpenAI(
+            api_key=conf().get("open_ai_api_key"),
+            base_url=conf().get("open_ai_api_base")
+        )
         proxy = conf().get("proxy")
         if proxy:
-            openai.proxy = proxy
+            self.client.proxy = proxy
 
         self.sessions = SessionManager(OpenAISession, model=conf().get("model") or "text-davinci-003")
         self.args = {
@@ -36,8 +36,7 @@ class OpenAIBot(Bot, OpenAIImage):
             "top_p": 1,
             "frequency_penalty": conf().get("frequency_penalty", 0.0),  # [-2,2]之间，该值越大则更倾向于产生不同的内容
             "presence_penalty": conf().get("presence_penalty", 0.0),  # [-2,2]之间，该值越大则更倾向于产生不同的内容
-            "request_timeout": conf().get("request_timeout", None),  # 请求超时时间，openai接口默认设置为600，对于难问题一般需要较长时间
-            "timeout": conf().get("request_timeout", None),  # 重试超时时间，在这个时间内，将会自动重试
+            "timeout": conf().get("request_timeout", None),  # 请求超时时间
             "stop": ["\n\n\n"],
         }
 
@@ -83,10 +82,10 @@ class OpenAIBot(Bot, OpenAIImage):
 
     def reply_text(self, session: OpenAISession, retry_count=0):
         try:
-            response = openai.Completion.create(prompt=str(session), **self.args)
-            res_content = response.choices[0]["text"].strip().replace("<|endoftext|>", "")
-            total_tokens = response["usage"]["total_tokens"]
-            completion_tokens = response["usage"]["completion_tokens"]
+            response = self.client.completions.create(prompt=str(session), **self.args)
+            res_content = response.choices[0].text.strip().replace("<|endoftext|>", "")
+            total_tokens = response.usage.total_tokens
+            completion_tokens = response.usage.completion_tokens
             logger.info("[OPEN_AI] reply={}".format(res_content))
             return {
                 "total_tokens": total_tokens,
@@ -96,20 +95,25 @@ class OpenAIBot(Bot, OpenAIImage):
         except Exception as e:
             need_retry = retry_count < 2
             result = {"completion_tokens": 0, "content": "我现在有点累了，等会再来吧"}
-            if isinstance(e, openai.error.RateLimitError):
-                logger.warn("[OPEN_AI] RateLimitError: {}".format(e))
-                result["content"] = "提问太快啦，请休息一下再问我吧"
-                if need_retry:
-                    time.sleep(20)
-            elif isinstance(e, openai.error.Timeout):
-                logger.warn("[OPEN_AI] Timeout: {}".format(e))
-                result["content"] = "我没有收到你的消息"
-                if need_retry:
-                    time.sleep(5)
-            elif isinstance(e, openai.error.APIConnectionError):
-                logger.warn("[OPEN_AI] APIConnectionError: {}".format(e))
-                need_retry = False
-                result["content"] = "我连接不到你的网络"
+            if isinstance(e, OpenAIError):
+                if e.code == "rate_limit_exceeded":
+                    logger.warn("[OPEN_AI] RateLimitError: {}".format(e))
+                    result["content"] = "提问太快啦，请休息一下再问我吧"
+                    if need_retry:
+                        time.sleep(20)
+                elif e.code == "timeout":
+                    logger.warn("[OPEN_AI] Timeout: {}".format(e))
+                    result["content"] = "我没有收到你的消息"
+                    if need_retry:
+                        time.sleep(5)
+                elif e.code == "connection_error":
+                    logger.warn("[OPEN_AI] APIConnectionError: {}".format(e))
+                    need_retry = False
+                    result["content"] = "我连接不到你的网络"
+                else:
+                    logger.warn("[OPEN_AI] Exception: {}".format(e))
+                    need_retry = False
+                    self.sessions.clear_session(session.session_id)
             else:
                 logger.warn("[OPEN_AI] Exception: {}".format(e))
                 need_retry = False

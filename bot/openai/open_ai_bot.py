@@ -16,7 +16,7 @@ from config import conf, load_config
 from common.utils import get_img_uri, encode_image
 
 from pdf2image import convert_from_path
-from pdfminer.high_level import extract_text
+# from pdfminer.high_level import extract_text
 from openai import OpenAI        
 import docx2txt
 import pandas as pd

@@ -17,10 +17,10 @@ def create_bot(bot_type):
         from bot.baidu.baidu_wenxin import BaiduWenxinBot
         return BaiduWenxinBot()
 
-    elif bot_type == const.CHATGPT:
-        # ChatGPT 网页端web接口
-        from bot.chatgpt.chat_gpt_bot import ChatGPTBot
-        return ChatGPTBot()
+    # elif bot_type == const.CHATGPT:
+    #     # ChatGPT 网页端web接口
+    #     from bot.chatgpt.chat_gpt_bot import ChatGPTBot
+    #     return ChatGPTBot()
 
     elif bot_type == const.OPEN_AI:
         # OpenAI 官方对话模型API

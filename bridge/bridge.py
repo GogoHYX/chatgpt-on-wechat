@@ -13,7 +13,7 @@ from voice.factory import create_voice
 class Bridge(object):
     def __init__(self):
         self.btype = {
-            "chat": const.CHATGPT,
+            "chat": const.OPEN_AI,
             "voice_to_text": conf().get("voice_to_text", "openai"),
             "text_to_voice": conf().get("text_to_voice", "google"),
             "translate": conf().get("translate", "baidu"),
@@ -24,8 +24,6 @@ class Bridge(object):
             self.btype["chat"] = bot_type
         else:
             model_type = conf().get("model") or const.GPT35
-            if model_type in ["text-davinci-003"]:
-                self.btype["chat"] = const.OPEN_AI
             if conf().get("use_azure_chatgpt", False):
                 self.btype["chat"] = const.CHATGPTONAZURE
             if model_type in ["wenxin", "wenxin-4"]:

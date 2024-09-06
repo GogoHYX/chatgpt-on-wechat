@@ -15,6 +15,7 @@ from bridge.reply import Reply, ReplyType
 from common import const
 from config import conf, load_config, global_config
 from plugins import *
+from common.const import HELP_TEXT_SUFFIX
 
 # 定义指令集
 COMMANDS = {
@@ -150,13 +151,13 @@ def get_help_text(isadmin, isgroup):
         help_text += f": {info['desc']}\n"
 
     # 插件指令
-    plugins = PluginManager().list_plugins()
-    help_text += "\n可用插件"
-    for plugin in plugins:
-        if plugins[plugin].enabled and not plugins[plugin].hidden:
-            namecn = plugins[plugin].namecn
-            help_text += "\n%s:" % namecn
-            help_text += PluginManager().instances[plugin].get_help_text(verbose=False).strip()
+    # plugins = PluginManager().list_plugins()
+    # help_text += "\n可用插件"
+    # for plugin in plugins:
+    #     if plugins[plugin].enabled and not plugins[plugin].hidden:
+    #         namecn = plugins[plugin].namecn
+    #         help_text += "\n%s:" % namecn
+    #         help_text += PluginManager().instances[plugin].get_help_text(verbose=False).strip()
 
     if ADMIN_COMMANDS and isadmin:
         help_text += "\n\n管理员指令：\n"
@@ -167,7 +168,8 @@ def get_help_text(isadmin, isgroup):
                 args = [a for a in info["args"]]
                 help_text += f"{' '.join(args)}"
             help_text += f": {info['desc']}\n"
-    return help_text
+
+    return help_text + HELP_TEXT_SUFFIX
 
 
 @plugins.register(
@@ -313,7 +315,7 @@ class Godcmd(Plugin):
                     except Exception as e:
                         ok, result = False, "你没有设置私有GPT模型"
                 elif cmd == "reset":
-                    if bottype in [const.OPEN_AI, const.CHATGPT, const.CHATGPTONAZURE, const.LINKAI, const.BAIDU, const.XUNFEI, const.QWEN, const.GEMINI, const.ZHIPU_AI]:
+                    if bottype in [const.OPEN_AI, const.CHATGPTONAZURE, const.LINKAI, const.BAIDU, const.XUNFEI, const.QWEN, const.GEMINI, const.ZHIPU_AI]:
                         bot.sessions.clear_session(session_id)
                         if Bridge().chat_bots.get(bottype):
                             Bridge().chat_bots.get(bottype).sessions.clear_session(session_id)
@@ -338,7 +340,7 @@ class Godcmd(Plugin):
                             load_config()
                             ok, result = True, "配置已重载"
                         elif cmd == "resetall":
-                            if bottype in [const.OPEN_AI, const.CHATGPT, const.CHATGPTONAZURE, const.LINKAI,
+                            if bottype in [const.OPEN_AI, const.CHATGPTONAZURE, const.LINKAI,
                                            const.BAIDU, const.XUNFEI, const.QWEN, const.GEMINI, const.ZHIPU_AI, const.MOONSHOT]:
                                 channel.cancel_all_session()
                                 bot.sessions.clear_all_session()

@@ -3,6 +3,8 @@ import os
 from urllib.parse import urlparse
 from PIL import Image
 from common.log import logger
+import base64
+from io import BytesIO
 
 def fsize(file):
     if isinstance(file, io.BytesIO):
@@ -68,3 +70,15 @@ def convert_webp_to_png(webp_image):
     except Exception as e:
         logger.error(f"Failed to convert WEBP to PNG: {e}")
         raise
+
+def get_img_uri(img):
+    buffer = BytesIO()
+    img.save(buffer, format="jpeg")
+    base64_image = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    data_uri = f"data:image/jpeg;base64,{base64_image}"
+    return data_uri
+
+def encode_image(image_path):
+  with open(image_path, "rb") as image_file:
+    base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+    return f"data:image/jpeg;base64,{base64_image}"

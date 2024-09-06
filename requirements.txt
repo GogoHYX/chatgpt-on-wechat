@@ -8,3 +8,10 @@ Pillow
 pre-commit
 web.py
 linkai>=0.0.6.0
+pdf2image>=1.16.1
+pdfminer.six>=20220524
+docx2txt>=0.8.11
+pandas>=2.1.1
+openpyxl
+aspose.slides
+

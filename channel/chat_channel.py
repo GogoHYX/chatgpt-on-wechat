@@ -11,7 +11,7 @@ from channel.channel import Channel
 from common.dequeue import Dequeue
 from common import memory
 from plugins import *
-
+from common.const import SUPPORT_FILE_EXTENSIONS
 try:
     from voice.audio_convert import any_to_wav
 except Exception as e:
@@ -148,15 +148,21 @@ class ChatChannel(Channel):
                 else:
                     return None
             content = content.strip()
-            img_match_prefix = check_prefix(content, conf().get("image_create_prefix",[""]))
+            img_match_prefix = check_prefix(content, conf().get("image_create_prefix",["画"]))
+            search_match_prefix = check_prefix(content, conf().get("search_prefix", ["搜索"]))
             if img_match_prefix:
                 content = content.replace(img_match_prefix, "", 1)
                 context.type = ContextType.IMAGE_CREATE
+            elif search_match_prefix:
+                content = content.replace(search_match_prefix, "", 1)
+                context.type = ContextType.SEARCH
             else:
                 context.type = ContextType.TEXT
+            
             context.content = content.strip()
             if "desire_rtype" not in context and conf().get("always_reply_voice") and ReplyType.VOICE not in self.NOT_SUPPORT_REPLYTYPE:
                 context["desire_rtype"] = ReplyType.VOICE
+
         elif context.type == ContextType.VOICE:
             if "desire_rtype" not in context and conf().get("voice_reply_voice") and ReplyType.VOICE not in self.NOT_SUPPORT_REPLYTYPE:
                 context["desire_rtype"] = ReplyType.VOICE
@@ -188,13 +194,14 @@ class ChatChannel(Channel):
         reply = e_context["reply"]
         if not e_context.is_pass():
             logger.debug("[chat_channel] ready to handle context: type={}, content={}".format(context.type, context.content))
-            if context.type == ContextType.TEXT or context.type == ContextType.IMAGE_CREATE:  # 文字和图片消息
+            if context.type == ContextType.TEXT or context.type == ContextType.IMAGE_CREATE or context.type == ContextType.SEARCH:  # 文字和图片消息
                 context["channel"] = e_context["channel"]
                 reply = super().build_reply_content(context.content, context)
             elif context.type == ContextType.VOICE:  # 语音消息
                 cmsg = context["msg"]
                 cmsg.prepare()
                 file_path = context.content
+                logger.info(f"[chat_channel] Received voice file: {file_path}")
                 wav_path = os.path.splitext(file_path)[0] + ".wav"
                 try:
                     any_to_wav(file_path, wav_path)
@@ -218,14 +225,45 @@ class ChatChannel(Channel):
                         reply = self._generate_reply(new_context)
                     else:
                         return
+            elif context.type == ContextType.FILE:
+                file_path = context.content
+                file_extension = os.path.splitext(file_path)[1].lower()
+        
+                if file_extension in SUPPORT_FILE_EXTENSIONS:
+                    self.send_notification(context, "收到一个文件: " + os.path.basename(file_path) + "，正在分析...\n请稍等")
+                    logger.info(f"[chat_channel] Received supported file: {file_path}")
+                    # Here you can add logic to handle these file types
+                    # For example, you might want to process the file or store its information
+                    memory.USER_FILE_CACHE[context["session_id"]] = {
+                        "path": file_path,
+                        "msg": context.get("msg")
+                    }
+                    reply = super().build_reply_content("分析以下文件", context)
+                else:
+                    self.send_notification(context, "不支持的文件类型: " + file_extension)
+                    logger.info(f"[chat_channel] Skipping unsupported file type: {context.content}")
+
+                try:
+                    os.remove(file_path)
+                except Exception as e:
+                    pass
+
             elif context.type == ContextType.IMAGE:  # 图片消息，当前仅做下载保存到本地的逻辑
+                self.send_notification(context, "收到一张图片: " + context.content)
                 memory.USER_IMAGE_CACHE[context["session_id"]] = {
                     "path": context.content,
                     "msg": context.get("msg")
                 }
+                reply = super().build_reply_content("分析以下图片", context)
+                try:
+                    os.remove(file_path)
+                except Exception as e:
+                    pass
+
             elif context.type == ContextType.SHARING:  # 分享信息，当前无默认逻辑
                 pass
-            elif context.type == ContextType.FUNCTION or context.type == ContextType.FILE:  # 文件消息及函数调用等，当前无默认逻辑
+                # logger.info("[chat_channel] receive file: {}".format(context.content))
+            elif context.type == ContextType.FUNCTION:  # 文件消息及函数调用等，当前无默认逻辑
                 pass
             else:
                 logger.warning("[chat_channel] unknown context type: {}".format(context.type))
@@ -295,6 +333,18 @@ class ChatChannel(Channel):
             if retry_cnt < 2:
                 time.sleep(3 + 3 * retry_cnt)
                 self._send(reply, context, retry_cnt + 1)
+
+    def send_notification(self, context: Context, message: str, reply_type: ReplyType = ReplyType.INFO):
+        """
+        Send a notification message to the client without handling incoming messages.
+        
+        :param context: The context of the conversation
+        :param message: The message to send
+        :param reply_type: The type of reply (default is TEXT)
+        """
+        reply = Reply(reply_type, message)
+        self._decorate_reply(context, reply)
+        self._send_reply(context, reply)
 
     def _success_callback(self, session_id, **kwargs):  # 线程正常结束时的回调函数
         logger.debug("Worker return success, session_id = {}".format(session_id))

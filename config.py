@@ -177,6 +177,11 @@ available_setting = {
     "Minimax_api_key": "",
     "Minimax_group_id": "",
     "Minimax_base_url": "",
+
+    "search_prefix": ["搜索"],
+    "perplexity_api_key": "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",
+    "perplexity_base_url": "https://api.perplexity.ai",
+    "perplexity_model": "llama-3-sonar-large-32k-online"
 }
 
 

@@ -12,7 +12,9 @@ class WechatComAppMessage(ChatMessage):
         self.msg_id = msg.id
         self.create_time = msg.time
         self.is_group = is_group
-
+    
+        logger.debug(f"[wechatcom] msg: {msg}")
+        logger.debug(f"[wechatcom] msg.type: {msg.type}")
         if msg.type == "text":
             self.ctype = ContextType.TEXT
             self.content = msg.content

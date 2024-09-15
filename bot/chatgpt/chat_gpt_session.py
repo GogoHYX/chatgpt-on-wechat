@@ -84,7 +84,7 @@ def num_tokens_from_messages(messages, model):
         tokens_per_name = 1
     else:
         logger.warn(f"num_tokens_from_messages() is not implemented for model {model}. Returning num tokens assuming gpt-3.5-turbo.")
-        return num_tokens_from_messages(messages, model="gpt-3.5-turbo")
+        return num_tokens_from_messages(messages, model="gpt-4")
     num_tokens = 0
     for message in messages:
         num_tokens += tokens_per_message

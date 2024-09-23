@@ -16,7 +16,8 @@ class ChatGPTSession(Session):
     def __init__(self, session_id, system_prompt=None, model="gpt-3.5-turbo"):
         super().__init__(session_id, system_prompt)
         self.model = model
-        self.reset()
+        if self.model != "o1-preview":
+            self.reset()
 
     def discard_exceeding(self, max_tokens, cur_tokens=None):
         precise = True

@@ -23,7 +23,7 @@ class Bridge(object):
         if bot_type:
             self.btype["chat"] = bot_type
         else:
-            model_type = conf().get("model") or const.GPT35
+            model_type = conf().get("model") or const.GPT_5_6_LUNA
             if conf().get("use_azure_chatgpt", False):
                 self.btype["chat"] = const.CHATGPTONAZURE
             if model_type in ["wenxin", "wenxin-4"]:

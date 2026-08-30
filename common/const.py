@@ -40,6 +40,10 @@ GPT4_32k = "gpt-4-32k"
 GPT4_06_13 = "gpt-4-0613"
 GPT4_32k_06_13 = "gpt-4-32k-0613"
 
+GPT_5_6_SOL = "gpt-5.6-sol"
+GPT_5_6_TERRA = "gpt-5.6-terra"
+GPT_5_6_LUNA = "gpt-5.6-luna"
+
 WHISPER_1 = "whisper-1"
 TTS_1 = "tts-1"
 TTS_1_HD = "tts-1-hd"
@@ -62,6 +66,7 @@ GEMINI_15_PRO = "gemini-1.5-pro"
 MODEL_LIST = [
               GPT35, GPT35_0125, GPT35_1106, "gpt-3.5-turbo-16k",
               GPT_4o, GPT_4o_MINI, GPT4_TURBO, GPT4_TURBO_PREVIEW, GPT4_TURBO_01_25, GPT4_TURBO_11_06, GPT4, GPT4_32k, GPT4_06_13, GPT4_32k_06_13,
+              GPT_5_6_SOL, GPT_5_6_TERRA, GPT_5_6_LUNA,
               WEN_XIN, WEN_XIN_4,
               XUNFEI, ZHIPU_AI, MOONSHOT, MiniMax,
               GEMINI, GEMINI_PRO, GEMINI_15_flash, GEMINI_15_PRO,

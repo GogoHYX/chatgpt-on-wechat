@@ -268,7 +268,7 @@ class Godcmd(Plugin):
                     if not isadmin and not self.is_admin_in_group(e_context["context"]):
                         ok, result = False, "需要管理员权限执行"
                     elif len(args) == 0:
-                        model = conf().get("model") or const.GPT35
+                        model = conf().get("model") or const.GPT_5_6_LUNA
                         ok, result = True, "当前模型为: " + str(model)
                     elif len(args) == 1:
                         if args[0] not in const.MODEL_LIST:
@@ -276,7 +276,7 @@ class Godcmd(Plugin):
                         else:
                             conf()["model"] = self.model_mapping(args[0])
                             Bridge().reset_bot()
-                            model = conf().get("model") or const.GPT35
+                            model = conf().get("model") or const.GPT_5_6_LUNA
                             ok, result = True, "模型设置为: " + str(model)
                 elif cmd == "id":
                     ok, result = True, user

@@ -39,7 +39,7 @@ class OpenAIBot(Bot):
         )
         self.perplexity_client = OpenAI(api_key=conf().get("perplexity_api_key"), base_url=conf().get("perplexity_base_url"))
         self.perplexity_model = conf().get("perplexity_model")
-        self.sessions = SessionManager(ChatGPTSession, model=conf().get("model") or "gpt-4o")
+        self.sessions = SessionManager(ChatGPTSession, model=conf().get("model") or "gpt-5.6-luna")
 
         proxy = conf().get("proxy")
         if proxy:
@@ -50,7 +50,7 @@ class OpenAIBot(Bot):
             self.tb4chatgpt = TokenBucket(conf().get("rate_limit_chatgpt", 20))
 
         self.args = {
-            "model": conf().get("model") or "chatgpt-4o-latest",  # 对话模型的名称
+            "model": conf().get("model") or "gpt-5.6-luna",  # 对话模型的名称
             # "temperature": conf().get("temperature", 0.7),  # 值在[0,1]之间，越大表示回复越具有不确定性
             # # "max_tokens":4096,  # 回复最大的字符数
             # "top_p": conf().get("top_p", 1),
